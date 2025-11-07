@@ -12,6 +12,8 @@ app.include_router(users.router)
 app.include_router(courts.router)
 app.include_router(jobs.router)
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 @app.get("/")
 def root():
     return {"message": "Bienvenido al Sistema de Reservas. Accede a /docs para la documentación de la API."}

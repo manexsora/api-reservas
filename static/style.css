@@ -1,0 +1,284 @@
+/* static/style.css */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7f6;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+}
+
+h1 {
+    color: #007bff;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Formularios y Entradas */
+form, .form-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+}
+
+label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    grid-column: span 2; /* Para que la etiqueta ocupe toda la fila */
+}
+
+input[type="text"], input[type="email"], input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Incluye padding en el width */
+    grid-column: span 2;
+}
+
+button {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Tabla */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #e9ecef;
+    font-weight: 700;
+    color: #495057;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+}
+
+.action-buttons button {
+    margin-right: 5px;
+    padding: 5px 10px;
+    font-size: 14px;
+}
+
+.delete-btn {
+    background-color: #dc3545;
+}
+
+.delete-btn:hover {
+    background-color: #c82333;
+}
+
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Añadir al final de static/style.css */
+
+/* --- Pestañas de Navegación --- */
+.tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.tab-button {
+    padding: 12px 25px;
+    margin: 0 5px;
+    background: transparent;
+    color: #495057;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+    color: #007bff;
+}
+
+.tab-button.active {
+    color: #007bff;
+    border-bottom: 3px solid #007bff;
+    font-weight: 600;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Añadir al final de static/style.css */
+
+/* --- SWITCH de Activo/Inactivo --- */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 45px; /* o 60px si lo prefieres grande */
+    height: 26px; /* o 34px si lo prefieres grande */
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* 💡 CAMBIO CLAVE: Cambiamos el color base del slider a rojo oscuro */
+    background-color: #dc3545; /* Rojo para inactivo por defecto (sin :checked) */
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px; /* o 26px */
+    width: 20px; /* o 26px */
+    left: 3px; /* o 4px */
+    bottom: 3px; /* o 4px */
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+/* Estado CHEQUEADO (Activo) */
+input:checked + .slider {
+    background-color: #28a745; /* Verde para activo */
+}
+
+/* Desplazamiento del círculo en estado CHEQUEADO */
+input:checked + .slider:before {
+    transform: translateX(19px); /* o 26px si el switch es más grande */
+}
+
+/* Opcional: Estilo de foco */
+input:focus + .slider {
+    box-shadow: 0 0 1px #28a745;
+}
+
+/* Cambios al estado "Checked" */
+input:checked + .slider {
+    background-color: #28a745; /* Verde para activo */
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #28a745;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+/* Color rojo para Inactivo */
+.slider.inactive {
+    background-color: #dc3545; /* Rojo para inactivo */
+}
+
+input:checked + .slider.inactive {
+    background-color: #28a745; /* Verde si se chequea */
+}
+
+/* static/style.css - Ajustes para inputs y selects modernos */
+
+/* Target Inputs y Selects */
+input[type="text"], 
+input[type="email"], 
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+select { /* 💡 Nuevo: Añadir SELECT */
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px; /* Bordes un poco más suaves */
+    box-sizing: border-box; 
+    grid-column: span 2;
+    transition: border-color 0.2s, box-shadow 0.2s; /* Transición para focus */
+    appearance: none; /* Eliminar el estilo nativo feo en select/date/time */
+    background-color: white; /* Asegurar fondo blanco */
+    font-size: 16px; 
+}
+
+/* Estado Focus */
+input:focus, select:focus {
+    border-color: #007bff; /* Borde azul al hacer foco */
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25); /* Sombra suave */
+    outline: none;
+}
+
+/* Estilo para el SELECT (Dropdown) */
+select {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="gray" d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 10px top 50%;
+    background-size: 16px;
+    cursor: pointer;
+}
+
+/* Botones de acción */
+.action-buttons button {
+    margin-right: 8px; /* Pequeño ajuste de espacio */
+    padding: 6px 12px; 
+    font-size: 14px;
+    border-radius: 4px; 
+}

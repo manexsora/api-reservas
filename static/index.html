@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Reservas - API FastAPI</title>
+    <link rel="stylesheet" href="/static/style.css"> 
+    <style> /* Mantengo aquí el CSS de pestañas y sliders para asegurar la visualización */
+        .tabs { display: flex; justify-content: center; margin-bottom: 25px; border-bottom: 2px solid #e0e0e0; }
+        .tab-button { padding: 12px 25px; margin: 0 5px; background: transparent; color: #495057; border: none; border-bottom: 3px solid transparent; cursor: pointer; font-size: 18px; transition: all 0.3s ease; }
+        .tab-button.active { color: #007bff; border-bottom: 3px solid #007bff; font-weight: 600; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        /* Estilos del Switch (Necesarios si no están en style.css) */
+        .switch { position: relative; display: inline-block; width: 45px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #28a745; }
+        input:checked + .slider:before { transform: translateX(19px); }
+        /* Final estilos Switch */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sistema de Gestión de Reservas ⚙️</h1>
+        
+        <div class="tabs">
+            <button class="tab-button active" onclick="showTab('jobs')">📅 Reservas</button>
+            <button class="tab-button" onclick="showTab('users')">👤 Usuarios</button>
+            <button class="tab-button" onclick="showTab('courts')">🎾 Canchas</button>
+        </div>
+        
+        <div id="message-container"></div>
+        
+        <div id="jobs-tab" class="tab-content active">
+            <h2>📅 Lista de Reservas</h2>
+
+            <button onclick="openJobForm(null)" style="margin-bottom: 20px;">+ Crear Nueva Reserva</button>
+
+            <table id="jobs-table"></table>
+
+            <div id="job-form-section" class="container" style="display:none; margin-top: 30px; border: 1px solid #007bff; padding: 20px;">
+                <h3 id="job-form-title">Crear Reserva</h3>
+                <form id="job-form">
+                    <input type="hidden" id="job-id">
+                    <input type="text" id="job-name" placeholder="Nombre/Descripción" required>
+                    
+                    <label for="job-user-id">Usuario:</label>
+                    <select id="job-user-id" required></select>
+            
+                    <label for="job-court-id">Cancha:</label>
+                    <select id="job-court-id" required></select>
+                    
+                    <label for="job-day">Día de la Semana:</label>
+                    <select id="job-day" required></select>
+
+                    <input type="time" id="job-time" required>
+                    
+                    <button type="submit" id="job-submit-btn">Guardar Reserva</button>
+                    <button type="button" onclick="closeJobForm()" style="background-color: gray;">Cancelar</button>
+                </form>
+            </div>
+        </div>
+        
+        <div id="courts-tab" class="tab-content">
+            <h2>🎾 Gestión de Canchas</h2>
+            <form id="court-form">
+                <h3>Crear/Editar Cancha</h3>
+                <input type="hidden" id="court-id">
+                <input type="text" id="court-name" placeholder="Nombre de la Cancha" required>
+                <input type="text" id="court-zona" placeholder="ID Zona" required>
+                <input type="text" id="court-actividad" placeholder="ID Actividad Libre" required>
+                <input type="number" id="court-duration" placeholder="Duración (minutos)" required>
+                <button type="submit" id="court-submit-btn">Crear Cancha</button>
+                <button type="button" id="court-cancel-btn" style="background-color: gray; display:none;">Cancelar Edición</button>
+            </form>
+            <h3>Lista de Canchas</h3>
+            <table id="courts-table"></table>
+        </div>
+
+        <div id="users-tab" class="tab-content">
+            <h2>👤 Gestión de Usuarios</h2>
+            <form id="user-form">
+                <h3>Crear/Editar Usuario</h3>
+                <input type="hidden" id="user-id">
+                <input type="text" id="user-name" placeholder="Nombre" required>
+                <input type="email" id="user-email" placeholder="Email" required>
+                <input type="password" id="user-password" placeholder="Contraseña (vacío para no cambiar en editar)">
+                <button type="submit" id="user-submit-btn">Crear Usuario</button>
+                <button type="button" id="user-cancel-btn" style="background-color: gray; display:none;">Cancelar Edición</button>
+            </form>
+            <h3>Lista de Usuarios</h3>
+            <table id="users-table"></table>
+        </div>
+
+
+    <script>
+        const API_BASE_URL = window.location.origin;
+        let activeModel = 'jobs'; // Default: Jobs
+
+        const DAYS_OF_WEEK = {
+            1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 
+            5: 'Viernes', 6: 'Sábado', 7: 'Domingo'
+        };
+
+        const DAY_ABBREVIATIONS = {
+            1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 
+            5: 'Vie', 6: 'Sáb', 7: 'Dom'
+        };
+        // --- Funciones de Utilidad y Tabulación ---
+        function showAlert(message, type = 'success') {
+            const container = document.getElementById('message-container');
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => { container.innerHTML = ''; }, 3000);
+        }
+
+        function showTab(model) {
+            activeModel = model;
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.tab-button[onclick="showTab('${model}')"]`).classList.add('active');
+
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`${model}-tab`).classList.add('active');
+
+            // Llamar a la función de carga específica
+            switch(model) {
+                case 'users': return fetchUsers();
+                case 'courts': return fetchCourts();
+                case 'jobs': return fetchJobs();
+            }
+        }
+        
+        // Función genérica para manejar GET
+        async function fetchModel(model) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/${model}`);
+                if (!response.ok) throw new Error('Error de red al cargar.');
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                showAlert(`Error al cargar ${model}: ${error.message}`, 'error');
+                console.error(`Error fetching ${model}:`, error);
+                return [];
+            }
+        }
+
+        // Función genérica para manejar DELETE
+        async function deleteModel(model, id) {
+            if (!confirm(`¿Estás seguro de que quieres eliminar el ${model.slice(0, -1)} ID ${id}?`)) return;
+            try {
+                const response = await fetch(`${API_BASE_URL}/${model}/${id}`, { method: 'DELETE' });
+                
+                if (response.status === 204) {
+                    showAlert(`${model.slice(0, -1)} eliminado con éxito.`, 'success');
+                    showTab(model); 
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Fallo al eliminar.');
+                }
+            } catch (error) {
+                showAlert(`Error al eliminar: ${error.message}`, 'error');
+            }
+        }
+
+        // --- CRUD USERS ---
+        async function fetchUsers() {
+            const users = await fetchModel('users');
+            const tableBody = document.querySelector('#users-table');
+            tableBody.innerHTML = `<thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>Acciones</th></tr></thead><tbody>${users.map(u => `
+                <tr>
+                    <td>${u.id}</td>
+                    <td>${u.name}</td>
+                    <td>${u.email}</td>
+                    <td class="action-buttons">
+                        <button onclick="editUser(${u.id}, '${u.name}', '${u.email}')">Editar</button>
+                        <button class="delete-btn" onclick="deleteModel('users', ${u.id})">Eliminar</button>
+                    </td>
+                </tr>
+            `).join('')}</tbody>`;
+        }
+
+        function editUser(id, name, email) {
+            document.getElementById('user-name').value = name;
+            document.getElementById('user-email').value = email;
+            document.getElementById('user-id').value = id;
+            document.getElementById('user-password').required = false;
+            document.getElementById('user-password').placeholder = 'Dejar vacío para no cambiar contraseña';
+            document.getElementById('user-submit-btn').textContent = 'Guardar Cambios';
+            document.getElementById('user-cancel-btn').style.display = 'inline-block';
+        }
+        
+        document.getElementById('user-cancel-btn').onclick = () => {
+            document.getElementById('user-form').reset();
+            document.getElementById('user-id').value = '';
+            document.getElementById('user-password').required = true;
+            document.getElementById('user-password').placeholder = 'Contraseña';
+            document.getElementById('user-submit-btn').textContent = 'Crear Usuario';
+            document.getElementById('user-cancel-btn').style.display = 'none';
+        }
+
+        document.getElementById('user-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('user-id').value;
+            const isEditing = id !== '';
+            const url = isEditing ? `${API_BASE_URL}/users/${id}` : `${API_BASE_URL}/users/`;
+            const method = isEditing ? 'PUT' : 'POST';
+
+            let userData = {
+                name: document.getElementById('user-name').value,
+                email: document.getElementById('user-email').value,
+            };
+            if (document.getElementById('user-password').value) {
+                userData.password = document.getElementById('user-password').value;
+            } else if (!isEditing) {
+                showAlert('La contraseña es requerida para crear un usuario.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(userData) });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Fallo en la operación.');
+                }
+                showAlert(`Usuario ${isEditing ? 'actualizado' : 'creado'} con éxito.`, 'success');
+                document.getElementById('user-cancel-btn').click(); 
+                fetchUsers();
+            } catch (error) { showAlert(`Error: ${error.message}`, 'error'); }
+        });
+
+
+        // --- CRUD COURTS ---
+        async function fetchCourts() {
+            const courts = await fetchModel('courts');
+            const tableBody = document.querySelector('#courts-table');
+            tableBody.innerHTML = `<thead><tr><th>ID</th><th>Nombre</th><th>Zona</th><th>Duración (min)</th><th>Acciones</th></tr></thead><tbody>${courts.map(c => `
+                <tr>
+                    <td>${c.id}</td>
+                    <td>${c.name}</td>
+                    <td>${c.id_zona}</td>
+                    <td>${c.duration_minutes}</td>
+                    <td class="action-buttons">
+                        <button onclick="editCourt(${c.id}, '${c.name}', '${c.id_zona}', '${c.id_actividad_libre}', ${c.duration_minutes})">Editar</button>
+                        <button class="delete-btn" onclick="deleteModel('courts', ${c.id})">Eliminar</button>
+                    </td>
+                </tr>
+            `).join('')}</tbody>`;
+        }
+        
+        function editCourt(id, name, zona, actividad, duration) {
+            document.getElementById('court-name').value = name;
+            document.getElementById('court-zona').value = zona;
+            document.getElementById('court-actividad').value = actividad;
+            document.getElementById('court-duration').value = duration;
+            document.getElementById('court-id').value = id;
+            document.getElementById('court-submit-btn').textContent = 'Guardar Cambios';
+            document.getElementById('court-cancel-btn').style.display = 'inline-block';
+        }
+        
+        document.getElementById('court-cancel-btn').onclick = () => {
+            document.getElementById('court-form').reset();
+            document.getElementById('court-id').value = '';
+            document.getElementById('court-submit-btn').textContent = 'Crear Cancha';
+            document.getElementById('court-cancel-btn').style.display = 'none';
+        }
+
+        document.getElementById('court-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('court-id').value;
+            const isEditing = id !== '';
+            const url = isEditing ? `${API_BASE_URL}/courts/${id}` : `${API_BASE_URL}/courts/`;
+            const method = isEditing ? 'PUT' : 'POST';
+
+            const courtData = {
+                name: document.getElementById('court-name').value,
+                id_zona: document.getElementById('court-zona').value,
+                id_actividad_libre: document.getElementById('court-actividad').value,
+                duration_minutes: parseInt(document.getElementById('court-duration').value),
+            };
+
+            try {
+                const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(courtData) });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Fallo en la operación.');
+                }
+                showAlert(`Cancha ${isEditing ? 'actualizada' : 'creada'} con éxito.`, 'success');
+                document.getElementById('court-cancel-btn').click(); 
+                fetchCourts();
+            } catch (error) { showAlert(`Error: ${error.message}`, 'error'); }
+        });
+
+        // --- UTILIDAD: Carga de Dropdowns ---
+        async function loadJobSelects() {
+            const users = await fetchModel('users');
+            const courts = await fetchModel('courts');
+
+            const userSelect = document.getElementById('job-user-id');
+            const courtSelect = document.getElementById('job-court-id');
+
+            userSelect.innerHTML = '<option value="">-- Seleccione Usuario --</option>';
+            courtSelect.innerHTML = '<option value="">-- Seleccione Cancha --</option>';
+
+            const daySelect = document.getElementById('job-day');
+            daySelect.innerHTML = '<option value="">-- Seleccione Día --</option>';
+            // Iterar sobre el mapa de días
+            for (const [key, value] of Object.entries(DAYS_OF_WEEK)) {
+                daySelect.innerHTML += `<option value="${key}">${value}</option>`;
+            }
+
+            users.forEach(u => {
+                // 3. Dropdowns Limpios: Solo el nombre
+                userSelect.innerHTML += `<option value="${u.id}">${u.name || u.email || 'Usuario sin nombre'}</option>`;
+            });
+
+            courts.forEach(c => {
+                 // 3. Dropdowns Limpios: Solo el nombre
+                courtSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+            });
+        }
+
+
+        // --- CRUD JOBS (Reservas) ---
+        async function toggleJobActive(id) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/jobs/${id}/toggle-active`, { method: 'PATCH' });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Fallo al cambiar estado.');
+                }
+                const data = await response.json();
+                showAlert(`Reserva "${data.name}": Estado cambiado a ${data.is_active === 1 ? 'Activo' : 'Inactivo'}`, 'success');
+                fetchJobs(); 
+            } catch (error) {
+                showAlert(`Error al cambiar estado: ${error.message}`, 'error');
+            }
+        }
+        
+        async function fetchJobs() {
+            await loadJobSelects(); 
+
+            const jobs = await fetchModel('jobs');
+            const tableBody = document.querySelector('#jobs-table');
+            
+            tableBody.innerHTML = `<thead><tr><th>Activo</th><th>Nombre Reserva</th><th>Usuario</th><th>Cancha</th><th>Día</th><th>Hora</th><th>Acciones</th></tr></thead><tbody>${jobs.map(j => {
+                
+                // Convertir el número del día (e.g., 1) a abreviatura (e.g., "Lun")
+                const dayAbbreviation = DAY_ABBREVIATIONS[j.reservation_day] || 'N/A'; 
+                
+                return `
+                    <tr>
+                        <td>
+                            <label class="switch">
+                                <input type="checkbox" ${j.is_active ? 'checked' : ''} onchange="toggleJobActive(${j.id})">
+                                <span class="slider"></span>
+                            </label>
+                        </td>
+                        <td>${j.name}</td>
+                        <td>${j.user_name || j.user_id}</td>
+                        <td>${j.court_name || j.court_id}</td>
+                        
+                        <td>${dayAbbreviation}</td> <td>${j.reservation_time}</td>
+                                                
+                        <td class="action-buttons">
+                            <button onclick='openJobForm(${JSON.stringify(j)})'>Editar</button>
+                            <button class="delete-btn" onclick="deleteModel('jobs', ${j.id})">Eliminar</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('')}</tbody>`;
+
+            closeJobForm();
+        }
+
+        function openJobForm(jobData = null) {
+            const formSection = document.getElementById('job-form-section');
+            const formTitle = document.getElementById('job-form-title');
+            const submitBtn = document.getElementById('job-submit-btn');
+            const form = document.getElementById('job-form');
+            form.reset();
+            document.getElementById('job-id').value = '';
+
+            if (jobData) {
+                formTitle.textContent = `Editar Reserva ID: ${jobData.id}`;
+                submitBtn.textContent = 'Guardar Cambios';
+                document.getElementById('job-id').value = jobData.id;
+                document.getElementById('job-name').value = jobData.name;
+                
+                // Mapear los IDs a los select
+                document.getElementById('job-user-id').value = jobData.user_id;
+                document.getElementById('job-court-id').value = jobData.court_id;
+                
+                document.getElementById('job-day').value = jobData.reservation_day;
+                document.getElementById('job-time').value = jobData.reservation_time;
+                document.getElementById('job-day').value = jobData.reservation_day; 
+                document.getElementById('job-time').value = jobData.reservation_time;
+            } else {
+                formTitle.textContent = 'Crear Nueva Reserva';
+                submitBtn.textContent = 'Crear Reserva';
+            }
+
+            formSection.style.display = 'block';
+            window.scrollTo({ top: formSection.offsetTop - 20, behavior: 'smooth' });
+        }
+
+        function closeJobForm() {
+            document.getElementById('job-form-section').style.display = 'none';
+        }
+
+        document.getElementById('job-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('job-id').value;
+            const isEditing = id !== '';
+            const url = isEditing ? `${API_BASE_URL}/jobs/${id}` : `${API_BASE_URL}/jobs/`;
+            const method = isEditing ? 'PUT' : 'POST';
+
+            const jobData = {
+                name: document.getElementById('job-name').value,
+                user_id: parseInt(document.getElementById('job-user-id').value),
+                court_id: parseInt(document.getElementById('job-court-id').value),
+                reservation_day: document.getElementById('job-day').value, // Weekday
+                reservation_time: document.getElementById('job-time').value,
+            };
+
+            try {
+                const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(jobData) });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Fallo en la operación.');
+                }
+                showAlert(`Reserva ${isEditing ? 'actualizada' : 'creada'} con éxito.`, 'success');
+                fetchJobs(); 
+            } catch (error) { showAlert(`Error: ${error.message}`, 'error'); }
+        });
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            showTab('jobs'); 
+        });
+    </script>
+</body>
+</html>
