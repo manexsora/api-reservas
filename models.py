@@ -57,6 +57,7 @@ class JobCreate(BaseModel):
     court_id: int
     reservation_day: int = Field(..., ge=1, le=7)
     reservation_time: str
+    is_active: int = 1
     
 class JobOut(JobBase):
     id: int
