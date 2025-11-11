@@ -2,12 +2,12 @@
 import sqlite3
 from fastapi import APIRouter, HTTPException
 from db.database import get_connection
-from models import JobCreate, JobOut
+from models import JobBase, JobOut
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
 @router.post("/", response_model=JobOut, status_code=201)
-async def create_job(job: JobCreate):
+async def create_job(job: JobBase):
     conn = get_connection()
     try:
         cur = conn.cursor()
@@ -61,7 +61,7 @@ async def get_job(job_id: int):
         conn.close()
 
 @router.put("/{job_id}", response_model=JobOut)
-async def update_job(job_id: int, job: JobCreate):
+async def update_job(job_id: int, job: JobBase):
     conn = get_connection()
     try:
         cur = conn.cursor()

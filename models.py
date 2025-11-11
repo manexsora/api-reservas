@@ -50,14 +50,6 @@ class JobBase(BaseModel):
         if not 1 <= v <= 7:
             raise ValueError('El día de la semana debe ser un número entre 1 (Lunes) y 7 (Domingo).')
         return v
-
-class JobCreate(BaseModel):
-    name: str
-    user_id: int
-    court_id: int
-    reservation_day: int = Field(..., ge=1, le=7)
-    reservation_time: str
-    is_active: int = 1
     
 class JobOut(JobBase):
     id: int
