@@ -3,6 +3,7 @@ import sqlite3
 from fastapi import APIRouter, HTTPException
 from db.database import get_connection
 from models import JobBase, JobOut
+from scripts import cron_utils
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
@@ -20,7 +21,9 @@ async def create_job(job: JobBase):
         )
         conn.commit()
         job_id = cur.lastrowid
-        return JobOut(id=job_id, **job.model_dump())
+        job.id = job_id
+        cron_utils.add_or_update_job(job.model_dump())
+        return job
     except sqlite3.IntegrityError:
         # Atrapa el error si user_id o court_id no existen (Foreign Key)
         raise HTTPException(status_code=400, detail="Error de clave foránea: user_id o court_id no existen.")
@@ -74,6 +77,8 @@ async def update_job(job_id: int, job: JobBase):
             (job.name, job.user_id, job.court_id, job.reservation_day, job.reservation_time, job.is_active, job_id)
         )
         conn.commit()
+        job.id = job_id 
+        cron_utils.add_or_update_job(job.model_dump(), job.is_active)
         if cur.rowcount == 0:
             raise HTTPException(status_code=404, detail="Reserva no encontrada")
         return await get_job(job_id)
@@ -93,6 +98,8 @@ async def delete_job(job_id: int):
         cur = conn.cursor()
         cur.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
         conn.commit()
+
+        cron_utils.delete_job(job_id)
         if cur.rowcount == 0:
             raise HTTPException(status_code=404, detail="Reserva no encontrada")
         return
@@ -107,7 +114,7 @@ async def toggle_job_active(job_id: int):
         cur = conn.cursor()
         
         # 1. Obtener el estado actual
-        cur.execute("SELECT is_active, name FROM jobs WHERE id = ?", (job_id,))
+        cur.execute("SELECT * FROM jobs WHERE id = ?", (job_id,))
         job = cur.fetchone()
         
         if job is None:
@@ -120,7 +127,7 @@ async def toggle_job_active(job_id: int):
         # 2. Actualizar el estado
         cur.execute("UPDATE jobs SET is_active = ? WHERE id = ?", (new_state, job_id))
         conn.commit()
-        
+        cron_utils.add_or_update_job(dict(job), is_active= new_state)
         return {"id": job_id, "name": name, "is_active": new_state, "message": f"Estado cambiado a {'Activo' if new_state == 1 else 'Inactivo'}."}
         
     except sqlite3.Error as e:
