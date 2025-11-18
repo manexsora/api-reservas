@@ -36,6 +36,7 @@ class CourtOut(CourtBase):
     
 # --- JOBS (Reservas) ---
 class JobBase(BaseModel):
+    id: int = None
     name: str
     user_id: int
     court_id: int
