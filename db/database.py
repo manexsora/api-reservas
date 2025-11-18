@@ -1,9 +1,9 @@
 import sqlite3
-
-sql_file = "/home/manex/Documents/Kode txorakerik/api-reservas/db/init.sql"
+import os
+sql_file = "/app/db/init.sql"
 
 def get_connection():
-    conn = sqlite3.connect(database="/home/manex/Documents/Kode txorakerik/api-reservas/db/database.db")
+    conn = sqlite3.connect(database=os.getenv('DB_PATH'))
     conn.row_factory = sqlite3.Row 
     return conn
 
