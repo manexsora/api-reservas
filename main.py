@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Sistema de Reservas API",
     description="API CRUD para Usuarios, Pistas y Reservas.",
-    version="1.0.0"
+    version="1.0.0",
     lifespan=lifespan
 )
 
