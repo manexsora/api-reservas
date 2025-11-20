@@ -1,12 +1,11 @@
 from db.database import get_connection
 from utils import decode_password
 from bs4 import BeautifulSoup
-import sqlite3
 import argparse
 import requests
-import sys
 import datetime
 BASE = "https://kirolzer-tolosa.provis.es"
+
 
 def get_job_details(job_id: int):
     try:
