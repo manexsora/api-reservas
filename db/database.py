@@ -23,5 +23,3 @@ def init_db():
         print("Error al inicializar la base de datos")
         print(e)
     conn.close()
-
-init_db()
