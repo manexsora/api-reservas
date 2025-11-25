@@ -10,7 +10,7 @@ CRON_COMMENT_TAG = 'poli-reserbak-job'
 
 def _generate_command_line(job_data: Dict) -> str:
     job_id = job_data['id']
-    return f'{PYTHON_EXEC} {SCHEDULER_SCRIPT_PATH} --job-id {job_id}'
+    return f'{PYTHON_EXEC} {SCHEDULER_SCRIPT_PATH} --job-id {job_id} >> /var/log/cron_custom.log 2>&1'
 
 
 def add_or_update_job(job_data: Dict, is_active: bool = True):

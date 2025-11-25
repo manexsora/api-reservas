@@ -56,6 +56,7 @@ def get_next_target_date(target_day_of_week: int) -> str:
     return next_target_day_date.strftime("%d/%m/%Y")
 
 def run_reservation_logic(job_id):
+    print(f"[CRON] Empezando reserva {job_id}")
     details = get_job_details(job_id)
 
     ## LOGIN ##

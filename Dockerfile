@@ -21,5 +21,8 @@ COPY . /app/
 # Copiar crontab vacío inicial
 RUN touch /etc/crontab
 
+# Redirigir logs de cron a stdout
+RUN ln -sf /dev/stdout /var/log/cron_custom.log
+
 # Ejecutar cron + uvicorn simultáneamente
 CMD cron && uvicorn main:app --host 0.0.0.0 --port 8080
