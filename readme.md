@@ -93,3 +93,12 @@ Nota: reservation_day: 1 = Lunes, 7 = Domingo.
 - Logs: La salida de los cron jobs se redirige a stdout, por lo que pueden consultarse mediante docker logs poli_reserbak_api.
 
 - Seguridad: Las contraseñas se almacenan con una codificación estándar (Base64) para su uso por el bot. Se recomienda desplegar este servicio en un entorno controlado.
+
+## 💡 Propósito, Motivación y Aclaración
+Poli-Reserbak es un proyecto personal desarrollado en varios ratos libres con un objetivo claro: el aprendizaje práctico y la creación de una herramienta útil.
+
+Fines Educativos: Este proyecto se ha realizado con fines estrictamente de estudio y mejora de habilidades. Me ha permitido familiarizarme con un stack de desarrollo moderno como FastAPI y consolidar mis conocimientos en la orquestación y despliegue de aplicaciones mediante Docker y Docker Compose. El interés principal es experimentar con nuevas tecnologías y patrones de arquitectura.
+
+Utilidad Personal: Más allá del aprendizaje, mi motivación es crear una herramienta funcional y de valor para mí y mis familiares, automatizando un proceso tedioso de reserva.
+
+Entorno de Despliegue: Actualmente, el sistema está desplegado en un servidor doméstico (home server) con la intención de que sea lo más eficiente en recursos posible. Como detalle de mi interés por la arquitectura de sistemas, utilizo Caddy como reverse proxy para gestionar el tráfico de forma limpia y segura.
