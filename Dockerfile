@@ -13,6 +13,7 @@ WORKDIR /app
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata cron \
     && echo "Europe/Madrid" > /etc/timezone \
+    && ln -sf /usr/share/zoneinfo/Europe/Madrid /etc/localtime \
     && rm -rf /var/lib/apt/lists/*
 
 # Copiar el archivo de requerimientos e instalar dependencias.
