@@ -1,4 +1,5 @@
 import sqlite3
+import os
 from crontab import CronTab
 from typing import Dict
 
@@ -10,7 +11,8 @@ CRON_COMMENT_TAG = 'poli-reserbak-job'
 
 def _generate_command_line(job_data: Dict) -> str:
     job_id = job_data['id']
-    return f'{PYTHON_EXEC} {SCHEDULER_SCRIPT_PATH} --job-id {job_id} >> /var/log/cron_custom.log 2>&1'
+    db_path = os.getenv("DB_PATH", "/app/db/database.db")
+    return f'DB_PATH={db_path} PYTHONPATH=/app {PYTHON_EXEC} {SCHEDULER_SCRIPT_PATH} --job-id {job_id} >> /var/log/cron_custom.log 2>&1'
 
 
 def add_or_update_job(job_data: Dict, is_active: bool = True):
