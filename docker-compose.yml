@@ -8,3 +8,8 @@ services:
       - "8080:8080"
     volumes:
       - ./db:/app/db
+      - crontab_data:/var/spool/cron/crontabs
+
+volumes:
+  crontab_data:
+    driver: local
