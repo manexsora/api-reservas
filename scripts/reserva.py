@@ -105,7 +105,7 @@ def run_reservation_logic(job_id):
             "X-Requested-With": "XMLHttpRequest"
         })
     print(confirm.status_code, confirm.text)
-
+    print(f"[CRON] Reserva {job_id} finalizada")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
