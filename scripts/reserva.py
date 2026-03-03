@@ -1,6 +1,7 @@
 from db.database import get_connection
 from utils import decode_password
 from bs4 import BeautifulSoup
+from datetime import datetime, timezone
 import argparse
 import requests
 import datetime
@@ -80,6 +81,8 @@ def run_reservation_logic(job_id):
         "Password": decode_password(details['password']),
         "RememberMe": "false"
     }
+    utc_now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
+    print(f"[CRON] Reserva {job_id} haciendose a {utc_now} ")
     login_resp = session.post(f"{BASE}/Login", data=payload)
     login_resp.raise_for_status()
 
