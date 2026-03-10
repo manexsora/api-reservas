@@ -1,12 +1,11 @@
 from db.database import get_connection
 from utils import decode_password
 from bs4 import BeautifulSoup
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date, timedelta
 import argparse
 import requests
-import datetime
-BASE = "https://kirolzer-tolosa.provis.es"
 
+BASE = "https://kirolzer-tolosa.provis.es"
 
 def get_job_details(job_id: int):
     try:
@@ -46,13 +45,13 @@ def get_job_details(job_id: int):
 def get_next_target_date(target_day_of_week: int) -> str:
     target_weekday_py = target_day_of_week - 1 
 
-    today = datetime.date.today()
+    today = date.today()
     current_weekday_py = today.weekday()
     days_until_next_target = (target_weekday_py - current_weekday_py + 7) % 7
     if days_until_next_target == 0:
         days_until_next_target = 7
 
-    next_target_day_date = today + datetime.timedelta(days=days_until_next_target)
+    next_target_day_date = today + timedelta(days=days_until_next_target)
 
     return next_target_day_date.strftime("%d/%m/%Y")
 
